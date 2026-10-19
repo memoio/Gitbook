@@ -16,3 +16,4 @@ site:
       draft: true
       content:
         directory: null
+        language: en

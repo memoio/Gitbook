@@ -10,3 +10,11 @@ site:
       content:
         directory: ./documentation
         language: zh
+    - type: space
+      key: space-2
+      title: en
+      path: en
+      draft: true
+      content:
+        directory: null
+        language: en

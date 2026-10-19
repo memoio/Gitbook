@@ -1,6 +1,4 @@
-# README
-
-## 4 Developer Guide
+# 4 Developer Guide
 
 This chapter is for agent, application and platform developers. It describes the integration flow for long-running tasks, the state read and write interfaces, adaptation of frameworks and memory engines, and the mechanisms for recovery, sharing, revocation, deletion and data encryption key rotation. Local validation and service deployment reuse the same object, authorization and receipt semantics; environment differences are expressed through the signed service manifest, key policy, backend parameters and adaptation configuration, and are checked automatically at load time.
 

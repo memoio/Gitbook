@@ -1,6 +1,6 @@
-# README
+# 3 Architecture and State Model
 
-## 3 Architecture and State Model
+##
 
 This chapter turns product language into technical boundaries: the three planes explain how the system is organized, the six layers explain how responsibilities are divided, and the request path explains how components interact; the state model and trust boundaries define what can be stored, migrated and proved.
 

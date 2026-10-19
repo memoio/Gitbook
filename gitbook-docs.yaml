@@ -9,3 +9,10 @@ site:
       default: true
       content:
         directory: ./documentation
+    - type: space
+      key: space-2
+      title: en
+      path: untitled
+      draft: true
+      content:
+        directory: null

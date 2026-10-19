@@ -1,6 +1,6 @@
 # SUMMARY
 
-* [MEMO Agent State Layer: Project Handbook](./)
+* [MEMO Agent State Layer: Project Handbook](untitled.md)
 * [Core Technical Principles](preface/core-principles.md)
 * [Figure Index](preface/figure-index.md)
 * [1 Getting Started with MEMO](./)

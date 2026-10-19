@@ -1,4 +1,4 @@
-# README
+# 6 Infrastructure and Product Responsibilities
 
 MEMO Protocol, MEFS, Data Wallet, Data Market, DataDrive, MEMO DID, Smart Layer, Storage Middleware, Meeda, FileProof, Attestation, compute platform, x402 and node economics correspond respectively to the capabilities of protocol, storage, identity, verification, computation, applications and settlement. In the Agent State Layer architecture, they take on the responsibilities of state storage, identity control, evidence verification, controlled processing and settlement through versioned adapters, and collaborate under unified object references, delegation and receipt rules.
 
@@ -7,3 +7,5 @@ MEMO Protocol, MEFS, Data Wallet, Data Market, DataDrive, MEMO DID, Smart Layer,
 {% endhint %}
 
 _Figure 21: Responsibility Mapping Between Infrastructure and the Agent State Layer_
+
+<figure><img src="/broken/files/vbFDpsBINYCuaoY4at5M" alt=""><figcaption></figcaption></figure>

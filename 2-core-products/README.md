@@ -1,4 +1,4 @@
-# README
+# 2 Core Products
 
 This chapter answers four core questions: who provides the underlying network capabilities, how state objects are stored, under what authorization an Agent accesses them, and how key facts are verified. The answers correspond to one protocol foundation and three Agent products: MEMO Protocol is the common protocol foundation; Vault, Agent Gateway and Proof are the three product entry points for agent scenarios.
 
@@ -9,3 +9,5 @@ Their division of labor can be remembered in one sentence: **Protocol provides n
 {% endhint %}
 
 _Figure 05: Collaboration of Gateway, Vault, Proof and the Protocol Foundation_
+
+<figure><img src="/broken/files/LsdiGt28Hh9mL4Cpkj39" alt=""><figcaption></figcaption></figure>

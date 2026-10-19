@@ -4,8 +4,8 @@ site:
   structure:
     - type: space
       key: space-1
-      title: Documentation
-      path: documentation
+      title: en-ch
+      path: cn_memo_agent_state_layer
       default: true
       content:
         directory: ./documentation

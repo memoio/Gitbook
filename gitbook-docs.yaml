@@ -14,7 +14,6 @@ site:
       key: space-2
       title: en
       path: untitled
-      draft: true
       content:
         directory: null
         language: en

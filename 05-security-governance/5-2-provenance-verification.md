@@ -1,0 +1,55 @@
+# 5 2 provenance verification
+
+## 5.2 Provenance and Verification
+
+### 5.2.1 Data Source, Storage Integrity and Version Verification
+
+Data source verification records the uploader, the source system, the collection time, the file hash, the object version, the content reference, the storage commitment, the retention period and the MEFS / Meeda proofs. Agent state additionally requires separate validation of version binding, reference continuity, deletion semantics and new-object adaptation, ensuring that file-level verification connects correctly with the state lifecycle.
+
+Verification must answer:
+
+1. Which version of which stable business object this is;
+2. Whether the content reference can be resolved and whether the plaintext is still accessible;
+3. Whether the `algorithm`, `scope` and `value` of the commitment match the specified object version and envelope;
+4. Who uploaded the data, where it was imported from, and what transformations it went through;
+5. Which time window and backend the storage proof covers;
+6. Whether the object was tampered with, expired naturally, was deleted under policy, or the backend is temporarily unavailable.
+
+CID, commitment, credential and proof must not be conflated. A CID is a content reference, a commitment is a commitment object bound to a defined algorithm and scope, a credential is a record issued by a principal, and a proof is verification material supporting a specific claim. The `scope=ciphertext` in the object example verifies only the specified ciphertext envelope; re-encryption or format conversion during migration may change the digest, requiring a mapping between the old and new envelopes and versions and a conversion receipt.
+
+Signature verification confirms the issuer's signature over the record, a Merkle inclusion proof confirms that a specified receipt belongs to a committed batch, and a storage proof verifies the retention claim within the time it covers; these verifications do not automatically prove that the event actually occurred, that the log has no omissions, that the source content is true, or that result acceptance passed. Evidence material being `available` means only that it can be obtained, and the issuer, algorithm, version, time range and trust conditions still need to be checked by type.
+
+### 5.2.2 Agent Memory Provenance, Generation Chain and Citation Validation
+
+Content entering long-term memory must be distinguished by source type and epistemic status. This is the first gate of memory governance: classify first, then decide whether it can enter long-term memory.
+
+| Type                         | Examples                                         | Default handling                                                                                                                                                    |
+| ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Facts provided by the user   | Project goals, explicit preferences              | Retain the submitter's signature and the original reference, and admit automatically according to source and purpose policy                                         |
+| Externally retrieved content | Web pages, databases, files                      | Record the URL / object ref, the retrieval time and the version                                                                                                     |
+| Tool-generated results       | Compilation, computation and query results       | Bind the tool, parameters, schema and observation                                                                                                                   |
+| Provided by another Agent    | Conclusions or results of a collaborating Agent  | Record the producer Agent, the delegation and the result of automatic acceptance rules                                                                              |
+| Model summaries              | Compression of existing material                 | Record the parent reference and the model version, and do not pass off as the original text                                                                         |
+| Agent inferences             | Judgments formed from inputs and model reasoning | Mark the inference type, evidence references and confidence information; admit or quarantine according to purpose and risk policy, and do not mark as a source fact |
+
+_Figure 19: Memory Source Checks, Automated Admission and Evidence Recording_
+
+`provenance` uses an object structure containing `source_type`, `source_refs`, `producer_agent_did`, `producer_instance_id`, `producer_run_id` and `confirmation_status`. The runtime values of `confirmation_status` are `candidate / confirmed / rejected / quarantined`, denoting candidate, admission passed, rejected and quarantined respectively. When automatic admission passes, `confirmation_status=confirmed`, `confirmation_method=policy_validation` and `confirmed_by=did:memo:service:policy-engine`, and `confirmation_policy_ref` records the admission policy actually executed. `confirmed` means conformance with that policy and does not mean the factual semantics are automatically true. The model and tool versions, the definite versions of source and dependency objects, the transformation steps and the time are supplemented according to the object type. `parent_refs` records only direct parent versions and cannot replace the sources or dependencies in provenance. A broken reference, an invalid signature or non-conforming fields go into a rejection or quarantine branch.
+
+Version conflicts are handled deterministically by policy: independent fields are merged; append-type data is deduplicated by stable key; when a conflict cannot satisfy the merge rules, the branch is retained and quarantined, and the read rules select a readable version or reject that write, preventing silent overwriting. `proof_refs` stores the evidence snapshot at object creation; later proofs are written to the Proof Registry indexed by `(object_id, version)` and merged for display at query time, keeping object versions immutable.
+
+### 5.2.3 Agent Runtime Content, Tool Results and Result Acceptance
+
+Runtime evidence focuses on observable content and does not record or disclose the model's private reasoning process by default. The following are recorded uniformly:
+
+* The Agent DID, `instance_id`, `run_id`, the user and the delegation;
+* Input object IDs and definite versions;
+* The model, harness, tool and schema versions;
+* Tool call IDs, parameter digests, observation results and errors;
+* External actions, the `operation_id` and each `request_id`, action status and reconciliation results;
+* Output objects, commitments and storage status;
+* The acceptance service identity, rule version, input evidence, validation results and signed statements.
+
+Result acceptance and run success are recorded separately. A success returned by a tool interface is that tool's report on the execution result; the acceptance service automatically checks the output format, business constraints, citation completeness and external results against the task contract, producing a pass, fail or insufficient-evidence outcome item by item, and submits, rejects or quarantines the result according to policy. An Attestation records the acceptance conclusion and binds the issuer, the verification method and the evidence references; when the issuer merely restates its own conclusion, the record type is marked as self-declared.
+
+The training pipeline establishes a provenance chain from raw traces, redaction conversion, dataset manifest, training run and evaluation to AgentRelease, and automatically validates purpose authorization and version references at each stage. Read permission cannot bypass training purpose authorization.

@@ -1,2 +1,2 @@
-# 02-core-products
+# 01-getting-started
 

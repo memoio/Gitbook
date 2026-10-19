@@ -10,4 +10,4 @@ Their division of labor can be remembered in one sentence: **Protocol provides n
 
 _Figure 05: Collaboration of Gateway, Vault, Proof and the Protocol Foundation_
 
-<figure><img src="/broken/files/LsdiGt28Hh9mL4Cpkj39" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/fig05.svg" alt=""><figcaption></figcaption></figure>

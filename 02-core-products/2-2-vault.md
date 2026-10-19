@@ -1,0 +1,50 @@
+# 2 2 vault
+
+MEMO Vault is a multi-backend state object layer for agents. It organizes raw conversations, long-term memory, task state, results, traces and handoff packages into objects that can be identified, versioned, encrypted and exported. **State is controlled by the user or a legitimate organizational principal, MEMO objects use a unified schema, and Local, Hosted and MEFS carry the same object and authorization semantics through backend adapters.** Adapters achieve interoperability between frameworks and backends through declared protocol versions, field mappings and consistency validation.
+
+## 2.2.1 State Objects, Namespaces and Versions
+
+A persisted State Object uses the fields below. See [8.1.1](file:///5907924/08-reference-economics/8-1-dev-reference.md#c8-1-1) for a complete example; the write command, the client-side pre-encryption payload and the persisted object are different representation layers, and an input command is not required to carry every server-generated field.
+
+| Field                        | Description                                                                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `object_id` / `type`         | Stable object identifier and type, such as memory, checkpoint, artifact                                                                                           |
+| `owner` / `namespace`        | The owner and the technical isolation scope                                                                                                                       |
+| `schema_version` / `version` | Schema version and object version; the latter is assigned by the server and is an opaque, unique and immutable string, such as `v_001`                            |
+| `parent_refs`                | List of direct parent version references, each binding an `object_id` and a `version`; provenance and business dependencies are placed separately in `provenance` |
+| `provenance`                 | Provenance object; records `source_type`, `source_refs`, the producing Agent / instance / run, transformations, dependencies and the automatic admission status   |
+| `policy_ref`                 | The applicable authorization policy                                                                                                                               |
+| `content_ref` / `commitment` | Encrypted content reference and commitment object; the commitment explicitly contains `algorithm`, `scope` and `value`                                            |
+| `created_at` / `expires_at`  | Creation and expiry information                                                                                                                                   |
+| `proof_refs`                 | Snapshot of references to receipts, audit roots, Attestations or storage proofs known at object creation; later evidence is associated through the Proof Registry |
+
+These fields express the object identity, controlling principal, version, provenance, policy and evidence references respectively; the presence of a field does not by itself prove that its content is true or that control has been effectively enforced. A namespace is responsible for technical isolation, for example `personal/preferences`, `project/a` and `team/research`. A project is a way of organizing business work, while a namespace is a permission and data partition; the two should not be mixed.
+
+An object update produces a new version and retains the direct parent versions, the modifying principal, a change digest and the object commitment, which are used for comparison, rollback, concurrency conflict handling and auditing. The server controls commits with an expected-parent-version condition, and clients cannot increment version strings or sort them lexically. Rollback is done by generating a new version that references the specified historical state, and historical versions remain unchanged. The version relationships describe how the state evolved, while a storage proof verifies the retention claim within an agreed time window.
+
+`proof_refs` is fixed as the evidence snapshot at object creation. Receipts produced asynchronously, including proofs, audit roots or storage proofs, are written to the Proof Registry indexed by `(object_id, version)`; each registration binds the evidence type, reference, issuer, applicable scope and registration time. The query side merges and displays the snapshot and the registry records and validates them separately, without rewriting the object history to append evidence.
+
+## 2.2.2 User-Held Keys, Encryption and Key Rotation
+
+State plaintext is encrypted by default on the client or in a controlled environment specified by policy. Users control data keys through a wallet, Data Wallet or an enterprise key system; an Agent obtains, under delegation, access or decryption capability limited to specific objects, purposes and terms. The deployment configuration separately registers the root key custodian, the object data key wrapping, the processes or environments permitted to decrypt, the operator's administrative privileges and the audit entry point. Before granting decryption capability, Gateway checks these configurations and the corresponding delegation; a hosted decryption environment handles plaintext within its explicitly stated trust boundary.
+
+The **data encryption key** in this section is used for content protection and is different from the **Agent identity signing key** in [2.3.1](/broken/pages/a231ef9b2a06ea0380d6c1f6747bf2b8fd2d6387#c2-3-1). Rotating an object or namespace data key does not change the Agent DID; replacing the identity signing key creates a new execution instance and Agent DID, and a continuity record links the old and new identities.
+
+_Figure 06: Data Keys, Restricted Authorization and Revocation Paths_
+
+* **Soft revocation**: a revocation record carries a monotonically increasing policy revision number and an effective time; the enforcement point synchronizes and persists the record and then rejects subsequent controlled requests. Restricted credentials are configured with a maximum validity period and a revocation cache time limit; when revocation status that meets the time limit cannot be obtained, managed requests are rejected by default.
+* **Data key revocation / rotation**: replace the data key and the encryption wrapping so that the old decryption capability cannot decrypt the new wrapping; old versions, plaintext already read and recipients' copies are not cleared automatically.
+* **Deletion**: handle the original object, replicas, caches, derivatives and backups according to policy; this is not to be confused with revoking authorization.
+* **Boundary of plaintext already read**: the system cannot promise to recall plaintext that a third party has already legitimately read, so highly sensitive state should use minimal disclosure and short-term authorization.
+
+## 2.2.3 Local / Hosted / MEFS Storage Backends
+
+The three backends use the same state object interface and are chosen according to data residency, collaboration mode and retention period; the service manifest registers the backend type, adapter version, read and write capabilities, persistence conditions and migration rules:
+
+| Backend | Strengths                                                      | Suitable scenarios                                                | Boundaries and responsibility                                                                                           |
+| ------- | -------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Local   | Private, low latency, directly controlled by the user          | Personal devices, development, highly sensitive state             | Availability, backup and device security are the user's responsibility                                                  |
+| Hosted  | Convenient access, easy operations and collaboration           | Teams, enterprise hosted services                                 | The operator, residency region, backup policy and administrator privileges are bounded through deployment configuration |
+| MEFS    | Decentralized long-term storage, redundancy, repair and proofs | Long-term state, cross-domain collaboration, verifiable retention | Decryption rights are still determined by keys and policy                                                               |
+
+Switching backends preserves the object schema, identity references and authorization semantics. A content location mapping resolves the stable `content_ref` in an object to the current backend address, and a change of physical location is registered through the mapping without rewriting existing object versions. The migration controller copies and validates item by item, following the manifest, objects, direct parent version relationships, provenance, permissions, encryption wrapping and evidence associations; only after the target backend reaches the declared persistence conditions and the manifest validation passes is the readable location switched atomically. When the same ciphertext is copied as-is, the original ciphertext commitment is compared; when re-encrypting or converting formats, a new object version is created and the old and new references, commitments and the conversion receipt are recorded. A partial failure keeps the source backend's readable entry and a list of missing items, and resumes idempotently through the same migration operation identifier; a success status covers only the scope that has been validated and switched.

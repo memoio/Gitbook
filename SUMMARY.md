@@ -1,3 +1,15 @@
 # Table of contents
 
-* [Page](README.md)
+* [02-core-products](README.md)
+  * [README](02-core-products/readme.md)
+  * [2 1 protocol](02-core-products/2-1-protocol.md)
+  * [2 3 gateway](02-core-products/2-3-gateway.md)
+  * [2 2 vault](02-core-products/2-2-vault.md)
+  * [2 4 proof](02-core-products/2-4-proof.md)
+* [07-standards](07-standards/README.md)
+  * [README](07-standards/readme.md)
+  * [7 1 standards](07-standards/7-1-standards.md)
+* [preface](preface/README.md)
+  * [core principles](preface/core-principles.md)
+  * [figure index](preface/figure-index.md)
+* [SUMMARY](summary.md)

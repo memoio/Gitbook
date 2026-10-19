@@ -1,0 +1,44 @@
+# 2 3 gateway
+
+Gateway is the unified control plane for agent state access, organizing DID authentication, signature verification, delegation validation, Storage Middleware and MCP access. MCP, REST and SDK requests within the MEMO management boundary call the same policy engine and share the semantics of object scope, purpose, term and revocation. Plaintext, copies or independent third-party interfaces that have left the controlled environment are managed under their own access boundaries.
+
+## 2.3.1 User Identity, Agent Identity and Delegation
+
+The user identity expresses the ultimate controlling principal of data and delegations. An Agent can persist as a service or role; the Agent DID identifies the executing principal under the "identity signing key + execution instance" scheme. `instance_id` expresses the execution instance, and `run_id` expresses a single task run initiated by that instance; a recovery creates a new `run_id` and does not automatically require a new DID. A controlled recovery of the same `instance_id` with the original identity signing key keeps the Agent DID; concurrent execution instances use independent `instance_id` values, each bound to its own Agent DID. Registration, user binding and access delegation are managed separately, and registration or binding by itself does not grant data access permission.
+
+Model, framework, name and version are mutable attributes in the identity description; regenerating the Agent identity signing key and forming a new instance creates a new Agent DID. The identity signing private key is generated and stored encrypted locally by the Agent, and the platform receives only the public key, the proof of control and the necessary registration information. The Agent DID is fixedly bound to the instance's identity signing public key; replacing that signing key generates a new `instance_id` and a new Agent DID at the same time.
+
+Old and new DIDs are linked through a continuity record. In normal succession, the old and new instances each sign, and the record is validated by the Owner delegation policy; when the old identity is unavailable, a pre-configured recovery authorization signs an independent recovery statement, which retains the recovery basis and the verification result and does not sign on behalf of the old identity. Historical credentials remain bound to the old DID, and queries can trace along the continuity record; access rights for the new DID are granted by a new delegation signed by the Owner, are not inherited automatically from the old delegation, and do not rewrite historical records.
+
+_Figure 07: Request Authorization Decision Linking User and Agent Identity_
+
+A delegation binds at least the user, the Agent, the namespace, the operation, the purpose, the term, whether re-delegation is allowed and the revocation address. Gateway verifies the currently valid delegation on every request and does not rely on a permanent session established by a single login.
+
+## 2.3.2 Authorization Policy, Revocation and Lifecycle
+
+The minimum authorization unit is:
+
+```
+Principal × Namespace × Operation × Term × Purpose
+```
+
+Read, write, search, export, import, train, share, delete and external actions use independent authorization operations. Payment only means that settlement succeeded; it does not mean the right to decrypt or use the state, and ordinary reading does not include training and resharing authorization. Read authorization does not grant a training license; Gateway enforces purpose constraints on controlled flows. For plaintext already obtained on an uncontrolled terminal, subsequent use must further be managed by measures such as minimal disclosure, contracts and auditing.
+
+The authorization lifecycle includes application, issuance, activation, use, renewal, expiry, revocation and audit. The Owner signs restricted delegations and purpose policies in advance, and on every request Gateway automatically validates the delegation chain, signature, scope, validity period, audience and revocation status. When a valid identity, delegation, purpose or policy version is missing, the request is rejected by default without touching state plaintext. Revocation records are synchronized by policy revision number, and the enforcement point records the receipt and effective times; when the revocation cache exceeds its validity period or the network is disconnected and validation is impossible, access is rejected and a minimal denial receipt is persisted. Existing plaintext and copies of old keys stay within their own independent trust boundaries.
+
+## 2.3.3 MCP / REST / SDK and Signed Receipts
+
+MCP serves the agent tool ecosystem, REST serves general applications and services, and the SDK encapsulates signing, retry, schema and verification logic. The three kinds of interface reuse the same object, authorization and receipt semantics. The MEFS MCP Server provides file upload and retrieval interfaces; Gateway's state tools handle object versions, delegation, revocation, handoff and evidence queries. The service manifest registers tool schemas, transports, audiences and authorized operations separately, and adapters automatically validate versions and field mappings when loaded.
+
+The basic capability set of the state interface:
+
+* `list_state` / `get_state` / `search_memory`
+* `put_state` / `create_checkpoint`
+* `build_context` / `export_memory_pack`
+* `get_receipt` / `verify_receipt`
+* `request_delegation` / `revoke_delegation`
+* `get_proof_reference`
+
+A receipt records `receipt_id`, `request_id`, `operation_id`, `user_id`, `agent_did`, `instance_id`, `run_id`, `delegation_id`, the disclosable object scope, operation, purpose, policy version, decision, time, result commitment and error code. `request_id` corresponds to one request attempt, `operation_id` corresponds to the same retryable business operation, and `receipt_id` corresponds to one receipt.
+
+The allow/deny value of `decision` denotes the policy decision, and `business_status` denotes not\_executed/succeeded/failed/unknown; the two must not be conflated under the word "success". A response can list `receipt_status` and `proof_status` separately, and a paid call additionally lists the payment status. Both allows and denials should leave a trace, but a failure to persist a receipt must be reported explicitly and recovered from, and no claim may be made that evidence was naturally complete during the failure. A denial receipt must not disclose the existence or content of an unauthorized object.

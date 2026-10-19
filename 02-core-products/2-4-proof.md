@@ -1,0 +1,38 @@
+# 2 4 proof
+
+MEMO Proof is the layer for collecting, aggregating, anchoring and verifying state evidence, and it organizes FileProof, Meeda, Attestation, access receipts, memory provenance and runtime evidence in a unified way. Among these, FileProof and Meeda provide verification material for specific storage and availability claims, Attestation records issuer statements, and an access receipt records the issuer's statement about a request, the policy and the result. Each piece of evidence binds the claim to be verified, the issuer or prover, the verification method, the time and version scope, and the trust conditions; a signed record cannot automatically prove external facts, business correctness or log integrity.
+
+## 2.4.1 Access Receipts and Audit Root Anchoring
+
+Gateway receipts are first written to the audit log under the persistence rules; Proof then computes a Merkle Root over each batch and anchors it asynchronously on-chain or in another publicly verifiable system. A verifier can check the receipt signature, the membership relationship within a given batch, and consistency with the anchored root. An inclusion proof does not prove that all requests have been recorded, nor that the issuer's statement is necessarily true. The log uses monotonic sequence numbers, the preceding digest and batch boundaries to record and detect gaps; the managed-request intake ledger and the business operation ledger are reconciled automatically by `request_id` and `operation_id`, and a recovery or exception record is generated when a gap is found. Independent replicas and periodic anchoring narrow the risk window for rewriting before anchoring, while evidence verification still takes the issuer identity and the record source as trust conditions.
+
+_Figure 08: Access Receipts, Audit Roots and Inclusion Proof Verification_
+
+Anchoring is performed in batches in the background and is separate from business persistence and the receipt-writing status; background anchoring being asynchronous does not mean a local receipt persistence failure can be ignored. The chain keeps only the root, time, version and necessary metadata, and does not store access content or state plaintext.
+
+## 2.4.2 MEFS / Meeda Storage Proofs and Challenges
+
+MEFS and Meeda are responsible for linking storage commitments, proof periods, challenges, repair and node responsibility. Meeda's design uses aggregated proofs, offline verification by Light Nodes and interactive challenges, relying on verification participants to discover and submit anomalies within an agreed time window. This mechanism moves part of the verification off-chain; the actual on-chain and off-chain costs, challenge costs and security have to be assessed together with the parameters and participation conditions, and negligible cost cannot be presumed from the aggregation mechanism alone. A storage proof answers "was the data stored under the agreed conditions and within the time window," and does not answer "is the content true," "is the model output correct," or "has the reader obtained authorization for a business purpose."
+
+When a proof failure occurs, the following need to be distinguished:
+
+* The data is temporarily unreachable;
+* The node did not respond or the proof timed out;
+* The proof format or verification failed;
+* The object has been deleted or has expired under policy;
+* The commitment is inconsistent with the requested version.
+
+Different failures go respectively into retry, repair, challenge, compensation, audit or normal lifecycle end flows, and cannot all be marked uniformly as "data loss."
+
+## 2.4.3 Agent Memory Provenance, Runtime Evidence and ERC-7829
+
+Memory Provenance uses a structured `provenance` object that records `source_type`, `source_refs`, the producing Agent / instance / run, model and tool versions, sources and dependencies, the transformation process and the policy admission status; direct parent version relationships are recorded separately in `parent_refs`. Runtime Evidence records observable inputs and outputs, tool calls, external actions and result digests, but does not store the model's private reasoning process by default.
+
+| Evidence type         | Main recorded content                                                                                                                                                                     | Verification it can support                                                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Memory provenance     | `source_type`, `source_refs`, `producer_agent_did`, `producer_instance_id`, `producer_run_id`, `confirmation_status`, `confirmation_method`, `confirmation_policy_ref` and `confirmed_by` | Whether the source and generation statements, dependencies and automatic admission records conform to the specified verification rules |
+| Run receipt           | `run_id`, Agent DID, delegation, policy, and tool and result digests                                                                                                                      | The issuer's statement of which principal requested or executed what under which authorization, and the results it recorded            |
+| Result acceptance     | Input / output versions, accepting principal, rules, result and time                                                                                                                      | Whether a result passed the specified acceptance                                                                                       |
+| ERC-7829 registration | Implementation fields such as object commitment, Reader and expire                                                                                                                        | On-chain representation of state objects that need rights confirmation or delivery                                                     |
+
+ERC-7829 is a data asset NFT proposal in which the MEMO ecosystem participates, describing data commitments, read permissions and expiry semantics on top of ERC-721. The state asset adapter maps the commitment, Reader and expiry rules of an authorized object onto the corresponding contract interface, and validates the network, contract address, ABI and interface version against the signed registry; for the mapping to external specifications, see [7.3.2](file:///5907924/07-standards/7-3-compatibility.md#c7-3-2). This path serves objects that explicitly choose rights confirmation, delivery or trading, and plaintext continues to be managed under Vault's encryption and access policy.

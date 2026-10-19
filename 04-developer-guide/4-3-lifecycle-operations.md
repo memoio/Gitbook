@@ -1,0 +1,90 @@
+# 4 3 lifecycle operations
+
+## 4.3.1 Saving, Recovery and Work Handoff
+
+Saving first requires fixing a consistent checkpoint boundary that records the task phase, the object versions used, to-dos, the status of external actions and recovery conditions, and then persisting the corresponding objects and the Checkpoint and saving a receipt. A checkpoint can be reported as recoverable only when both the dependency objects and the checkpoint meet the declared persistence conditions; when incomplete, the missing items and the pending recovery status should be retained, so that a half-finished product is not treated as a complete checkpoint.
+
+The recovery flow:
+
+{% stepper %}
+{% step %}
+## Verify access
+
+Verify the principal, instance and delegation, and read the permitted Checkpoint manifest through the managed entry point.
+{% endstep %}
+
+{% step %}
+## Verify the commitment
+
+Verify the schema, the specified version, and the algorithm, scope and value of the commitment.
+{% endstep %}
+
+{% step %}
+## Check dependencies
+
+Check that all dependency objects are readable and the versions match.
+{% endstep %}
+
+{% step %}
+## Check external actions
+
+Check the completed external actions to avoid duplicate payments, messages or transaction submissions.
+{% endstep %}
+
+{% step %}
+## Handle missing or conflicting items
+
+Degrade or block explicitly on anything missing or in conflict.
+{% endstep %}
+
+{% step %}
+## Create a recovery run
+
+Create a new `run_id`, recording the current `instance_id` and which Checkpoint / version the recovery is from.
+{% endstep %}
+{% endstepper %}
+
+What is recovered is the agreed business state, constrained by adapters, model and tool versions, external dependencies and accessible objects; identical results across models are not promised. When the same execution instance recovers with the original identity signing key, the Agent DID is retained and a new `run_id` is created; regenerating the Agent identity signing key creates a new `instance_id` and a new Agent DID, links history through the continuity record, and uses a new delegation signed by the Owner to access state. Concurrent instances are registered separately and cannot share an instance identity merely by having the same role name.
+
+Work handoff uses a Memory Pack. The receiving side cannot treat content in the Pack as system instructions and cannot inherit the sending Agent's permissions; it must be re-authorized using the recipient's own identity and delegation.
+
+## 4.3.2 Team Sharing and Permission Management
+
+A team space distinguishes at least organization administrators, data owners, project members, Agents and external partners. A role is only a set of policy templates, and the final authorization still has to land on a principal, namespace, operation, term and purpose.
+
+| Operation            | Policy controls                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Read and search      | Minimal namespace, field-level filtering, purpose and term                                                      |
+| Write and modify     | Expected parent version, source signature, admission rules and deterministic conflict policy                    |
+| Bulk export          | An independent export delegation signed by the Owner, rate and scope limits, and an export receipt              |
+| Training data export | An independent training license, redaction status, and the dataset manifest                                     |
+| External sharing     | Recipient identity, redistribution conditions, expiry, and watermark / tracking policy                          |
+| High-risk actions    | Independent operation authorization, purpose and target limits, quota, Checkpoint, idempotency and compensation |
+
+Team permission changes are recorded through signed policy versions and change events, and runtime requests automatically validate the corresponding version, scope and validity period. An administrator's permission to manage organization policy is kept separate from decryption permission; hosted decryption, emergency access and retention policy are each bound to pre-authorized principals, purposes, environments, terms and audit conditions, and only managed requests satisfying the corresponding policy can be executed.
+
+## 4.3.3 Export, Revocation, Deletion and Key Rotation
+
+These four kinds of operations are often confused, but their goals are entirely different:
+
+| Operation                    | Goal                                                                                                                         | What it cannot promise                                                                                                                                                                    |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Export                       | Generate an authorized state package or portable copy                                                                        | Does not automatically transfer ownership and all permissions                                                                                                                             |
+| Revocation                   | Once the revocation record is persisted at the relevant enforcement points, block subsequent controlled access or operations | Does not automatically recall plaintext, old ciphertext and the corresponding keys already held; propagation and caching are controlled by time limits and a deny-on-disconnection policy |
+| Deletion                     | Handle plaintext, derived content, caches and backups according to policy                                                    | Does not guarantee immediate removal of all external copies                                                                                                                               |
+| Data encryption key rotation | Re-encrypt and update the wrapping so that the old key cannot decrypt the new wrapping                                       | Does not change the Agent DID and does not automatically clear old versions and recipients' copies                                                                                        |
+
+Deletion should produce a processing report that lists separately the status of plaintext, indexes, summaries, caches, backups, Memory Packs, training datasets and externally shared copies. Data encryption key rotation must update the wrapping and the corresponding version records, revoke old access capability by policy, and, where history still needs to be retained, state clearly the readable scope of old versions. When re-encryption changes the ciphertext commitment, the old and new envelopes, the digest mapping, the conversion receipt and the evidence associations should be retained; the change cannot be hidden as the original version being unchanged. Replacement of the Agent identity signing key is handled under the identity scheme in Section 5.1.2 and is not part of data rotation here.
+
+An export is a recordable event, and the source object can remain active. Authorization, object deletion and data key rotation are different dimensions and are not represented by a single mutually exclusive state machine:
+
+| Dimension                  | Status or event expression                                         | Relationship with other dimensions                                                                                                           |
+| -------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Export event               | Records the export manifest, scope, recipient and receipt          | An export does not change the source object's active status and does not automatically transfer permissions                                  |
+| Authorization status       | active / revoked; re-authorization produces a new valid delegation | Revoking access does not mean the object has been deleted; an old delegation is not restored by a new authorization                          |
+| Object status              | active → deleting → deleted                                        | Completion of deletion is defined by the disclosed backends and the retention policy, and does not mean all external copies have disappeared |
+| Data key rotation progress | pending / in progress / completed / failed                         | Recorded independently; object availability follows the rotation policy and does not automatically change the Agent identity                 |
+
+The figure below represents only the object deletion lifecycle; exports are recorded as events, and authorization and data key rotation each maintain their own status.
+
+_Figure 16: Export Events and Deletion Lifecycle of a State Object_

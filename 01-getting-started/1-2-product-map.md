@@ -1,0 +1,77 @@
+# 1 2 product map
+
+## 1.2 Product Map
+
+The product map consists of one common protocol foundation, three core Agent-facing products, and components for storage, wallet, marketplace and data availability. The connectors in the figure express responsibility support, controlled access and evidence convergence; every component takes part in the collaboration through versioned interfaces.
+
+_Figure 03: Mapping of the Protocol Foundation, Three Agent Products and Base Components_
+
+### 1.2.1 MEMO Protocol: Protocol and Network Foundation
+
+> **Product positioning: the protocol and network foundation of MEMO, defining shared rules for storage, identity, verification, execution and settlement, and providing base capabilities for Vault, Agent Gateway and Proof.**
+
+MEMO Protocol organizes collaboration among users, storage providers, guardians and verifiers. Users submit service requests; providers store data according to orders and respond to proofs; guardians take part in matching, challenges and repair coordination; and the settlement module allocates fees based on service records and verification results. Role permissions, proof windows, algorithm sets and economic parameters are constrained by versioned protocol configuration.
+
+Protocol provides reusable network capabilities and collaboration rules, which models, agent frameworks and application orchestration use through the upper-layer interfaces. The six-layer protocol capability domains, the MEFS node network, and the verification and settlement flows together support the storage, resumption and verification of agent state.
+
+### 1.2.2 MEMO Vault: Where Agent State Lives
+
+> **Product positioning: a user-controlled storage and management layer for agent state, organizing Memory, Task State, Checkpoints, Traces and Artifacts into state objects that can be encrypted, versioned and migrated.**
+
+Vault unifies object identifiers, namespaces, the version graph, provenance, authorization references and lifecycle, and connects to three storage forms through the backend interface:
+
+* **Local** keeps encrypted state and indexes on devices controlled by the user or organization.
+* **Hosted** has a managed service handle resource scheduling, backup and operations, with key control configured through user keys or an organizational KMS policy.
+* **MEFS** hands encrypted objects to the decentralized storage network and manages long-term retention responsibility through orders, redundancy, repair and storage proofs.
+
+The three backends share the state object contract, and the storage location and service responsibility are chosen by deployment configuration. Gateway validates the identity, delegation and purpose of every managed access; the key system wraps data keys according to the recipient and purpose; exports observe object rights, source licenses and recipient authorization.
+
+Vault defines objects and state semantics, while MEFS defines decentralized storage responsibility. Backend migration preserves logical objects, the parent version graph, provenance and authorization references through a Memory Pack. `content_ref` is a stable content reference, and the location mapping records the physical location; migrating the same ciphertext only updates the location mapping, and the original object version and digest remain unchanged. Re-encryption or format conversion creates a new object version and records the wrapping mapping and the conversion receipt, forming continuous migration evidence.
+
+### 1.2.3 MEMO Agent Gateway: Who Can Do What
+
+> **Product positioning: the unified policy entry point for agent state access, performing principal identification, Owner delegation verification, fine-grained authorization, request dispatch and local signed receipt recording.**
+
+Gateway records the user identity, the Agent DID, the execution instance and each individual run separately, verifies the delegation signed by the Owner, and then enforces policy by namespace, operation, term, purpose, cost and the scope of external actions. An Agent DID binds the identity signing public key to an execution instance; when the identity signing key is replaced, a new instance and a new DID are created, history is linked through a signed continuity record, and the Owner issues an independent delegation for the new DID.
+
+MCP, REST and SDK connect to the same policy and state operation contract. Both allowed and denied requests that pass through the managed entry point go into the local receipt flow; a persistence failure goes into a recovery queue associated by `operation_id`, and the business result and receipt status are returned separately. Registration, Owner binding and access delegation are three independent steps, and an executing principal can access a resource only after a valid delegation and the policy both pass.
+
+### 1.2.4 MEMO Proof: How to Prove That It Happened
+
+> **Product positioning: the evidence organization and verification layer for agent state, associating access, provenance, runtime, storage and external statements with defined objects, versions and business operations.**
+
+Proof collects and aggregates access receipts, audit roots, object commitments, Attestations, FileProof and storage proofs, giving verifiers the evidence scope, issuer, algorithm, time window and verification entry point. Known `proof_refs` are recorded when an object is created; later proofs are appended to the Proof Registry indexed by `(object_id, version)` and merged for display at query time, keeping object versions immutable.
+
+Each kind of evidence corresponds to a defined claim. A signed receipt expresses the event statement made by the issuer, a Merkle inclusion proof shows that a record belongs to an anchored batch, and a storage proof verifies retention responsibility within an agreed time window. Log coverage, event authenticity and the conformance of business results are verified by their own rules, and no single kind of proof can support all the conclusions.
+
+### 1.2.5 MEFS: Decentralized Storage Network
+
+> **Product positioning: a decentralized long-term storage network that manages retention responsibility for encrypted data through storage orders, redundancy, repair, challenges and proofs.**
+
+MEFS organizes its reliability mechanisms with multiple replicas, erasure coding and RAFI risk-aware failure detection. RAFI sets differentiated thresholds by data block risk to trigger inspection and repair; guardians challenge providers according to the protocol configuration, and challenge, proof and repair records feed into settlement and responsibility determination. Users, providers, guardians, orders, staking and settlement together make up Vault's decentralized backend.
+
+The Vault adapter maps a state object's ciphertext wrapping, content reference and proof requirements onto MEFS storage orders, while the state layer continues to maintain logical objects, namespaces, versions, provenance and policy. MEFS serves both general file storage and the ciphertext storage of agent state; the two kinds of workloads share network responsibilities and are metered separately.
+
+### 1.2.6 Data Wallet: Entry Point for User Identity, Keys and Authorization
+
+> **Product positioning: the control entry point for user identity, data keys and authorization policy, managing data access rights, Agent delegation, key wrapping and recovery configuration.**
+
+Data Wallet manages data assets through identity and permission records, configures an independent data encryption key for each storage system, and expresses access scope through roles such as Reader. The Owner sets principals, resources, operations, purposes, terms and budgets through signed delegations, and the policy engine handles requests automatically on that basis. The wallet provides delegation query and revocation, data key rotation, state export and access record queries.
+
+Data Wallet manages the user's control configuration, Gateway enforces each access decision, Vault stores state, and Proof organizes evidence. The control interface, the policy enforcement points, the key system and the audit service are connected through verifiable requests; revocation blocks subsequent controlled access and key issuance, while plaintext that has already been disclosed remains under the control of the receiving environment.
+
+### 1.2.7 Data Market: Delivery of Data and State Assets
+
+> **Product positioning: the authorized trading and delivery layer for data and agent state assets, connecting asset description, purpose license, pricing, settlement, key issuance and delivery evidence into a complete flow.**
+
+Data Market associates identities, assets and access rights through DIDs, stores encrypted deliverables on MEFS, and records the necessary transaction relationships with smart contracts and settlement adapters. Memory Packs, experience data, Skills, training datasets and results are screened according to asset policy; once source licenses, sensitive data detection, authorization scope and recipient eligibility pass, a delivery package limited in purpose, term and scope is generated.
+
+Ordinary personal memory stays private, and only objects explicitly selected by the Owner in the signed policy can enter the asset flow. Reading, training, redistribution, commercial use and transfer of ownership are authorized separately. After payment completes, Gateway rechecks the delegation, the policy and the revocation status before delivering according to the recipient's key; payment status, key issuance and business delivery are recorded separately.
+
+### 1.2.8 Meeda: Data Availability and Storage Proofs
+
+> **Product positioning: a data availability component that mainly provides storage proofs, providing Proof with availability evidence of limited scope through off-chain data storage, on-chain commitments, random sampling and challenges.**
+
+Meeda's data path keeps data off-chain and registers KZG commitments on-chain. Light Nodes obtain verification materials and perform verification, and raise challenges against anomalies according to protocol rules. The sampling count, challenge window, retention period, network parameters and reward rules are bound by versioned configuration, and verification results carry the parameters used and the time range.
+
+Meeda is responsible for data availability and the related storage proofs, while Proof is responsible for organizing and verifying across evidence types. Meeda submits commitments, sampling and challenge results to Proof through an evidence adapter, and Proof retains the assumptions and applicability boundaries of that proof.

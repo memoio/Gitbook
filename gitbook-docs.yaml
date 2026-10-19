@@ -9,6 +9,7 @@ site:
       default: true
       content:
         directory: ./documentation
+        language: zh
     - type: space
       key: space-2
       title: en

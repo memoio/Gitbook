@@ -30,6 +30,7 @@
   * [6 1 protocol mefs](06-infrastructure/6-1-protocol-mefs.md)
   * [6 2 meeda compute](06-infrastructure/6-2-meeda-compute.md)
   * [6 3 app entry](06-infrastructure/6-3-app-entry.md)
+  * [README](06-infrastructure/readme.md)
 * [07-standards](07-standards/README.md)
   * [7 3 compatibility](07-standards/7-3-compatibility.md)
   * [README](07-standards/readme.md)
@@ -54,4 +55,3 @@
   * [appendix b](appendix/appendix-b.md)
   * [appendix a](appendix/appendix-a.md)
   * [appendix c](appendix/appendix-c.md)
-* [README](readme-1.md)

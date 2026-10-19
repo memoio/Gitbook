@@ -76,7 +76,7 @@
     * [5.3.1 Run Traces, Decision Content and Observability](05-security-governance/5-3-runtime-risk.md#c5-3-1)
     * [5.3.2 Prompt Injection, Memory Poisoning and Model Drift](05-security-governance/5-3-runtime-risk.md#c5-3-2)
     * [5.3.3 Keys, Privilege Escalation, External Side Effects and Failure Recovery](05-security-governance/5-3-runtime-risk.md#c5-3-3)
-* [6 Infrastructure and Product Responsibilities](readme-1.md)
+* [6 Infrastructure and Product Responsibilities](06-infrastructure/)
   * [6.1 MEMO Protocol and MEFS](06-infrastructure/6-1-protocol-mefs.md)
     * [6.1.1 Six-Layer Protocol and Network Architecture](06-infrastructure/6-1-protocol-mefs.md#c6-1-1)
     * [6.1.2 Users, Providers, Guardians and Nodes](06-infrastructure/6-1-protocol-mefs.md#c6-1-2)

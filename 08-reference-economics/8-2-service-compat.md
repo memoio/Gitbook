@@ -1,0 +1,81 @@
+# 8 2 service compat
+
+## 8.2.1 Product Billing, Storage and Traffic Quotas
+
+Billing consists of meters, a versioned PriceBook, a quoter, budget policy and settlement adapters. Subscriptions, usage-based billing, reserved capacity and on-chain per-use payment all map to a unified ledger. The PriceBook defines unit prices, quotas, region or network, validity period, rounding rules, failure charges and service levels, and the quoter locks the price version used and the cost cap before execution.
+
+| Metered item           | Unit                                          | Pricing and service rules                                                                             |
+| ---------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Storage capacity       | GiB-month / object-month                      | Replica and erasure coding overhead, minimum retention period, deletion and billing cutoff conditions |
+| Read / download        | GiB, requests                                 | Caching, egress traffic, cross-region fees                                                            |
+| Write / version        | Requests, objects or GiB                      | Minimum billing unit for small objects, failed writes, historical version retention                   |
+| Proof / Attestation    | Count or batch                                | Proof type, on-chain gas, cost of failure handling                                                    |
+| Gateway                | Requests, active Agents or policy evaluations | Included quota, peak rate limiting, audit export                                                      |
+| Controlled computation | CPU/GPU/TEE time, tasks                       | Cold start, timeout, model and image costs                                                            |
+| Settlement             | Transactions or transaction value             | Facilitator fees, network fees, refund and reversal fees                                              |
+
+A Quote binds `quote_id`, `pricebook_ref`, the asset, tax rules, validity period, maximum quantity, cost cap, settlement network, compensation rules and `operation_id`. Metering events carry the unit, quantity, time window, deduplication key and service evidence references, and bills are aggregated with deterministic rounding and deduplication rules, so network retries of the same operation are not charged twice.
+
+Long tasks reserve budget first and then carry over actual consumption by execution Checkpoint; scaling up within a threshold must fall under a budget policy pre-signed by the Owner. When the quota is exhausted, new irreversible charges stop, a recovery point is saved and a budget error is returned, and the quota is not bypassed through retries. After a task completes or is canceled, the remaining reservation is released.
+
+Failure charges are handled by stage: a rejection at the eligibility pre-check does not enter business settlement; an operation that was paid but failed to deliver creates a refund or reversal task; services already delivered are metered according to records; failures of proof or node responsibility are handled under the compensation policy referenced by the quote. Non-refundable network costs are itemized separately in the quote. A bill associates only operations, metering and necessary evidence, and does not store task plaintext.
+
+x402 uses the fixed flow of Chapter 7: eligibility pre-check → 402 quote → the client retries Gateway carrying the payment authorization → Facilitator verification → settlement → Gateway re-authorization → execution or delivery. The Facilitator does not access state plaintext and does not substitute for resource authorization. When the settlement result is `unknown`, the order is queried and reconciled; an operation that was paid but failed to deliver enters `refund_pending` under the compensation policy. Only after a verifiable refund result matching the original `operation_id`, refund amount and payee is received does the payment status change to `refunded`; when a refund fails or its result is unknown, `refund_pending` is retained, the reason is recorded, and the order is queried and reconciled first to avoid duplicate refunds. Business, payment, receipt and proof statuses are recorded independently.
+
+The PriceBook and service level configuration are distributed through the signed registry, and the effective time, region, network and version are written into each quote. An accepted quote is settled at the version it locked, and price updates apply only to new quotes within the effective scope. Amount and quota parameters are injected by configuration, and at load time non-negative values, precision, currency or asset identifier, validity period and budget cap are validated.
+
+## 8.2.2 Client, Framework and Backend Adaptation
+
+Adapters declare protocol versions, interface capabilities, object schemas, authentication methods, state mappings, maintenance responsibility and validation entry points through a Compatibility Profile. A client first matches the required capabilities and then selects an adaptation path; when the version or permissions do not match, a deterministic compatibility error is returned.
+
+| Category            | Integration object                                                   | Adaptation responsibility                                       | Descriptor contents                                                                     |
+| ------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Agent Host / Client | MCP, A2A or direct API clients                                       | Maps protocol messages to Gateway commands                      | Client and protocol versions, transport, authentication, tool and resource capabilities |
+| Agent Framework     | Orchestration, tool-calling and multi-Agent frameworks               | memory, checkpoint, artifact, tool wrapper                      | State mappings, recovery conditions, dependencies, versions and validation cases        |
+| Memory Engine       | Vector stores, knowledge graphs, summarization and memory components | Source import, candidate admission, indexing and object mapping | Original object references, index versions, admission policy and deletion propagation   |
+| Storage Backend     | Local, Hosted, MEFS                                                  | Vault backend interface                                         | Envelope, redundancy, proof, retention and migration rules                              |
+| Identity / Wallet   | Data Wallet, DID wallets, enterprise IdPs                            | Signing, OIDC / VC mapping, delegation                          | Trust domain, issuer, key control, recovery and revocation rules                        |
+| Settlement          | Account balances, on-chain settlement, x402, enterprise billing      | Unified quote and payment status mapping                        | Asset, network, fees, finality, refund and idempotency rules                            |
+
+The Compatibility Profile registers maintainers and service responsibility independently; community adapters likewise perform signing, dependency locking and interface validation. At runtime, `compatible` and `incompatible` record the configuration match result, health status records service reachability, and a validation report records the specific test scope, and the three are judged separately. Required capabilities are matched only on explicit declarations and validation rules and are not inferred from product names.
+
+Local has the device and keys managed by the user or organization; Hosted has a managed service handle resources and operations, connecting to user keys or an organizational KMS according to policy; MEFS manages retention responsibility through distributed storage orders. The three forms share `object_id`, the parent version graph, `policy_ref`, `provenance` and evidence references. Migration preserves logical continuity through a manifest and conversion receipts; migrating ciphertext as-is only updates the location mapping corresponding to `content_ref` and retains the original version and digest; re-encryption or format conversion creates a new version and records the new envelope and digest mapping.
+
+## 8.2.3 Glossary and Runtime Status Index
+
+The table below unifies product, identity, object and evidence terminology:
+
+| Term                                          | Unified meaning                                                                                               | Key boundary                                                                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Agent State Layer                             | MEMO's trusted state infrastructure for agents                                                                | The overall architecture includes storage, control and evidence responsibilities                                         |
+| MEMO Protocol                                 | The foundation for protocol, network roles and economic settlement                                            | Upper-layer products use underlying capabilities through protocol contracts                                              |
+| MEFS                                          | Decentralized storage network                                                                                 | Responsible for storage orders, retention, redundancy, repair and proofs                                                 |
+| MEMO Vault                                    | State object, version, encryption and multi-backend storage layer                                             | Backend location and object semantics are managed separately                                                             |
+| MEMO Agent Gateway                            | Entry point for identity, delegation, policy and protocol access                                              | Manages managed requests and cannot recall plaintext already disclosed                                                   |
+| MEMO Proof                                    | The layer that organizes and verifies provenance, access, runtime and storage evidence                        | Each kind of evidence binds a defined claim and time range                                                               |
+| User identity                                 | The identity of the data owner or controller                                                                  | Authorizes executing principals through independent delegation                                                           |
+| Agent DID                                     | An identifier for the executing principal, binding the identity signing public key and the execution instance | Replacing the identity signing key creates a new instance and a new DID                                                  |
+| `instance_id` / `run_id`                      | Identify the execution instance and one task run respectively                                                 | Multiple task runs can belong to the same execution instance                                                             |
+| Identity signing key / content encryption key | Used for principal signing and content protection respectively                                                | Rotating the content encryption key does not change the Agent DID                                                        |
+| Memory                                        | A memory unit that later tasks can reuse                                                                      | A candidate enters long-term memory after passing the admission policy, and fact verification is performed independently |
+| State Object                                  | A versioned, authorizable and verifiable general state object                                                 | Versions are immutable, and parent references record only direct parent versions                                         |
+| Trace                                         | A record of the steps, calls and result relationships of a run                                                | Keeps observable events and digests and controls the privacy scope                                                       |
+| Artifact                                      | A deliverable result such as a document, code, report or data                                                 | Delivery and conformance acceptance are recorded separately                                                              |
+| Memory Pack                                   | A manifest-based encrypted state export and handoff package                                                   | Binds the recipient, purpose, scope and term                                                                             |
+| Receipt                                       | A signed statement by an issuer about an access, change, payment or delivery event                            | Signature verification does not equal event authenticity, log completeness or business success                           |
+| Commitment                                    | A commitment or digest defined by `algorithm`, `scope` and `value`                                            | Algorithm, scope and envelope are kept consistent when comparing                                                         |
+| Attestation                                   | A verifiable signed statement by an issuer about a specific claim                                             | Constrained by the issuer's trust, revocation and verification policy                                                    |
+
+Runtime status is recorded separately by responsibility:
+
+| Status domain              | Recorded content                                               | Automated handling                                                                    |
+| -------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Deployment configuration   | Local, Hosted, MEFS and the enabled service modules            | Assemble dependencies from the registry and check keys and endpoints                  |
+| Interface matching         | Protocol, schema, adapter and required capabilities            | A session is established on a match, and a compatibility error is returned on failure |
+| Identity and authorization | Registration, binding, delegation, validity period, revocation | Verify signatures, and check purpose and revocation status at request time            |
+| Candidate admission        | Source, rule results, reasons for rejection or quarantine      | Written after the policy passes, with branches retained on conflict                   |
+| Business and credentials   | `business_status`, `receipt_status`, `proof_status`            | Persisted, queried, recovered and verified separately                                 |
+| Payment                    | `payment_status` and the original transaction reference        | Idempotent settlement, order query, reconciliation and compensation                   |
+| Object lifecycle           | Active status, term, deletion and retention rules              | Propagate index, key and replica handling tasks by backend                            |
+
+For the complete terminology, product names, interface rules and automated checks, see [Appendix A](file:///5907924/appendix/appendix-a.md).

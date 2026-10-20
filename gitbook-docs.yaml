@@ -3,13 +3,6 @@ site:
   title: MEMO
   structure:
     - type: space
-      key: space-1
-      title: ch
-      path: cn_memo_agent_state_layer
-      content:
-        directory: ./documentation
-        language: zh
-    - type: space
       key: space-2
       title: en
       path: en-memo
@@ -17,3 +10,10 @@ site:
       content:
         directory: null
         language: en
+    - type: space
+      key: space-1
+      title: ch
+      path: cn_memo_agent_state_layer
+      content:
+        directory: ./documentation
+        language: zh

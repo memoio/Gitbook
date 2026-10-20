@@ -8,4 +8,4 @@ The MEMO Agent State Layer splits "identity and discovery, tool invocation, agen
 
 _Figure 25: Responsibility Composition of Open Standards and the MEMO State Layer_
 
-<figure><img src="/broken/files/mRrTfxOxlercI0dtxkdn" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/fig25.svg" alt=""><figcaption></figcaption></figure>

@@ -1,4 +1,4 @@
-# appendix a
+# Appendix A: Unified Terminology, Interface Conventions and Automated Validation
 
 This appendix defines product naming, identity and state terminology, role responsibilities, the configuration model, interface contracts and automated validation rules. Components exchange requests, objects and evidence under shared contracts, and deployment parameters are resolved through the configuration mechanism in [Appendix B](/broken/pages/be6896e742ac84976411145f54b8ba4b00ca8727).
 
@@ -97,7 +97,7 @@ Products express capability combinations through responsibilities and deployment
 
 ### A.5.1 Naming, Numbering and References
 
-* Product names use the fixed spellings in [A.1](appendix-a.md#a-1); identifiers, fields and enumerations keep their prescribed case.
+* Product names use the fixed spellings in [A.1](appendix-a-unified-terminology-interface-conventions-and-automated-validation.md#a-1); identifiers, fields and enumerations keep their prescribed case.
 * Native fields use `snake_case`; external HTTP headers and protocol fields are mapped through adapters.
 * `object_id`, `version`, `instance_id`, `run_id`, `request_id`, `operation_id` and `receipt_id` denote different entities and are not interchangeable.
 * Chapters are numbered `1`, `1.1` and `1.1.1`; fixed anchors support references from the table of contents, figures and interfaces.

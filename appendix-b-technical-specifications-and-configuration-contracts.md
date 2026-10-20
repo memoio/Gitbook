@@ -1,6 +1,6 @@
-# appendix b
+# Appendix B: Technical Specifications and Configuration Contracts
 
-## Appendix B: Technical Specifications and Configuration Contracts
+
 
 Deployment configuration combines identity, objects, permissions, evidence, payment and the runtime environment into a verifiable service contract. A configuration is signed by a trusted issuer and declares its scope, version, validity period and content digest; component startup and configuration switchover are both validated by the loader for signature, dependencies, interfaces and environment constraints, and are loaded or rejected according to the result.
 

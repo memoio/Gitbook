@@ -12,4 +12,4 @@ The MEMO Agent State Layer offers three composable capability profiles: **the Ba
 
 _Figure 31: The Three Capability Profiles and How They Compose_
 
-<figure><img src="/broken/files/CghjUr1wVOKw7wyJ8W8r" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/fig31.svg" alt=""><figcaption></figcaption></figure>

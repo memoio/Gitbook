@@ -8,4 +8,6 @@ MEMO Protocol, MEFS, Data Wallet, Data Market, DataDrive, MEMO DID, Smart Layer,
 
 _Figure 21: Responsibility Mapping Between Infrastructure and the Agent State Layer_
 
+<figure><img src="../.gitbook/assets/fig21.svg" alt=""><figcaption></figcaption></figure>
+
 <figure><img src="/broken/files/vbFDpsBINYCuaoY4at5M" alt=""><figcaption></figcaption></figure>

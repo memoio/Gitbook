@@ -6,14 +6,14 @@ site:
       key: space-1
       title: ch
       path: cn_memo_agent_state_layer
-      default: true
       content:
         directory: ./documentation
         language: zh
     - type: space
       key: space-2
-      title: en-MEMO
+      title: en
       path: en-memo
+      default: true
       content:
         directory: null
         language: en
